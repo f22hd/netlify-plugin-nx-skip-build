@@ -1,6 +1,5 @@
 module.exports = {
   onPreBuild: ({ utils, constants }) => {
-    try {
       const projectName = getProjectName(constants.PUBLISH_DIR)
       const lastDeployedCommit = process.env.CACHED_COMMIT_REF
       const latestCommit = 'HEAD'
@@ -14,9 +13,6 @@ module.exports = {
           `Build was cancelled because ${projectName} was not affected by the latest changes`,
         )
       }
-    } catch (error) {
-      return utils.build.failBuild(error)
-    }
   },
 }
 
