@@ -19,6 +19,9 @@
   "author": "fahd_allibdi <fa88hd@gmail.com>",
   "license": "MIT",
   "repository": "//github.com/f22hd/netlify-plugin-skip-build",
+  "bugs": {
+    "url": "https://github.com/f22hd/netlify-plugin-nx-skip-build/issues"
+  },
   "directories": {
     "lib": "src",
     "test": "test"
