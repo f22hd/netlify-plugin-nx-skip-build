@@ -15,7 +15,7 @@ A Netlify Build plugin that skips not affected apps in your nx monorepo.
 ### Install
 Install the module
 ```shell
-npm i netlify-plugin-nx-skip-build
+npm i -D netlify-plugin-nx-skip-build
 ```
 
 Add the plugin to `netlify.toml`
