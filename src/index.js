@@ -1,6 +1,8 @@
+const { basename } = require('path');
+
 module.exports = {
   onPreBuild: ({ utils, constants }) => {
-      const projectName = getProjectName(constants.PUBLISH_DIR)
+      const projectName = process.env.PROJECT_NAME || basename(constants.PUBLISH_DIR);
       const lastDeployedCommit = process.env.CACHED_COMMIT_REF
       const latestCommit = 'HEAD'
       const projectHasChanged = projectChanged(
@@ -15,13 +17,6 @@ module.exports = {
       }
   },
 }
-
-// extract project name from distination publish path,
-function getProjectName(dir = '') {
-  const [name] = dir.split('/').reverse()
-  return name
-}
-
 // eslint-disable-next-line no-unused-vars
 function projectChanged(currentProject, fromHash, toHash) {
   const execSync = require('child_process').execSync
