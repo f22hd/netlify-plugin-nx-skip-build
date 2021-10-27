@@ -27,7 +27,7 @@ Add the plugin to `netlify.toml`
 
 
 ### Important notes:
-The plugin required an app output folder name identical to the project name under the apps folder.
+The plugin requires an app output folder name identical to the project name under the apps folder.
 
 Example:
 
