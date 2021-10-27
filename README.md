@@ -1,6 +1,6 @@
 
 
-A netlify plugin that skipping not affected apps in your nx monorepo.
+A Netlify Build plugin that skips not affected apps in your nx monorepo.
 
 <p align="center">
   <a aria-label="npm version" href="https://www.npmjs.com/package/netlify-plugin-nx-skip-build">
