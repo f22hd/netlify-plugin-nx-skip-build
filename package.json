@@ -1,6 +1,6 @@
 {
   "name": "netlify-plugin-nx-skip-build",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Netlify Build plugin - A netlify plugin that skipping not affected apps in your nx workspace.",
   "main": "src/index.js",
   "files": [
