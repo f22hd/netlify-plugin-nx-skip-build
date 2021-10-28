@@ -26,15 +26,8 @@ Add the plugin to `netlify.toml`
 ```
 
 
-### Important notes:
-The plugin requires an app output folder name identical to the project name under the apps folder.
-
-Example:
-
-```
-app-name: example
-output: dist/apps/example
-```
+### How to use?
+Add new environment variable called `PROJECT_NAME` by netlify UI (recommended) or your .env file , so the plugin can work as expected.
 
 
 ### Resources
