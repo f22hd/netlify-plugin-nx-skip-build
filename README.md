@@ -27,7 +27,7 @@ Add the plugin to `netlify.toml`
 
 
 ### How to use?
-Add new environment variable called `PROJECT_NAME` by netlify UI (recommended) or your .env file , so the plugin can work as expected.
+Add a new environment variable called `PROJECT_NAME` that is supposed application name by netlify UI (recommended) or your .env file, so the plugin can work as expected.
 
 
 ### Resources
