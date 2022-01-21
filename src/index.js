@@ -5,15 +5,17 @@ module.exports = {
       const projectName = process.env.PROJECT_NAME || basename(constants.PUBLISH_DIR);
       const lastDeployedCommit = process.env.CACHED_COMMIT_REF
       const latestCommit = 'HEAD'
-      const projectHasChanged = projectChanged(
-        projectName,
-        lastDeployedCommit,
-        latestCommit,
-      )
-      if (!projectHasChanged) {
-        utils.build.cancelBuild(
-          `Build was cancelled because ${projectName} was not affected by the latest changes`,
+      if(lastDeployedCommit){
+        const projectHasChanged = projectChanged(
+          projectName,
+          lastDeployedCommit,
+          latestCommit,
         )
+        if (!projectHasChanged) {
+          utils.build.cancelBuild(
+            `Build was cancelled because ${projectName} was not affected by the latest changes`,
+          )
+        }
       }
   },
 }
