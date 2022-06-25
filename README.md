@@ -25,6 +25,8 @@ Add the plugin to `netlify.toml`
  package = "netlify-plugin-nx-skip-build"
 ```
 
+### deploy forcement
+`v0.0.7` allows force deployment when you need to redeploy your site and skip any plugin logic by adding `NX_FORCE_DEPLOYMENT` as environment variable with value `true`.
 
 ### How to use?
 Add a new environment variable called `PROJECT_NAME` that is supposed application name by netlify UI (recommended) or your .env file, so the plugin can work as expected.
