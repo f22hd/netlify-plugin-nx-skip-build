@@ -1,5 +1,3 @@
-
-
 A Netlify Build plugin that skips not affected apps in your nx monorepo.
 
 <p align="center">
@@ -11,9 +9,10 @@ A Netlify Build plugin that skips not affected apps in your nx monorepo.
   </a>
 </p>
 
-
 ### Install
+
 Install the module
+
 ```shell
 npm i -D netlify-plugin-nx-skip-build
 ```
@@ -26,17 +25,20 @@ Add the plugin to `netlify.toml`
 ```
 
 ### deploy forcement
-`v0.0.7` allows force deployment when you need to redeploy your site and skip any plugin logic by adding `NX_FORCE_DEPLOYMENT` as environment variable with value `true`.
+
+`v0.0.7` allows force deployment when you need to redeploy your site and skip
+any plugin logic by adding `NX_FORCE_DEPLOYMENT` as environment variable with
+value `true`.
 
 ### How to use?
-Add a new environment variable called `PROJECT_NAME` that is supposed application name by netlify UI (recommended) or your .env file, so the plugin can work as expected.
 
+Add a new environment variable called `PROJECT_NAME` that is supposed
+application name by netlify UI (recommended) or your .env file, so the plugin
+can work as expected.
 
 ### Resources
 
 - [netlify-blog](https://www.netlify.com/blog/2020/04/21/deploying-nx-monorepos-to-netlify/)
-
-
 
 ### Contribution
 
