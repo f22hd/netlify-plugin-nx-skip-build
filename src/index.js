@@ -34,14 +34,16 @@ function projectChanged(currentProject, fromHash, toHash) {
     const getAffected = `nx show projects --affected --plain --base=${fromHash} --head=${toHash}`
     const output = execSync(getAffected).toString()
     //get the list of changed projects from the output
-    const changedProjects = output?.split('\n') // array of affected projects
+    const changedProjects = output ? output.split('\n') : [] // array of affected projects
     return (
       changedProjects.findIndex((project) => {
         return project ? project === currentProject : false
       }) > -1
     )
   } catch (e) {
-    console.error(`Error parsing affected projects ${e?.message}`)
+    console.error(
+      `Error parsing affected projects ${e ? e.message : 'Unknown error'}`,
+    )
     return
   }
 }
