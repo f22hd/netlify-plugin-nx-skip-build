@@ -1,53 +1,45 @@
 const { basename } = require('path')
 
+const {
+  SKIP,
+  getDeployRange,
+  decideFromNx,
+  nxAffectedProjects,
+} = require('./affected')
+
 module.exports = {
   onPreBuild: ({ utils, constants }) => {
     const projectName =
       process.env.PROJECT_NAME || basename(constants.PUBLISH_DIR)
-    const lastDeployedCommit = process.env.CACHED_COMMIT_REF
-    const latestCommit = process.env.COMMIT_REF
-    const firstDeployment =
-      process.env.CACHED_COMMIT_REF === process.env.COMMIT_REF
-    const isForcedDeployment = process.env.NX_FORCE_DEPLOYMENT || false
-
-    const projectHasChanged = projectChanged(
-      projectName,
-      lastDeployedCommit,
-      latestCommit,
-    )
-
-    if (
-      !projectHasChanged &&
-      !firstDeployment &&
-      !isManualDeployment(isForcedDeployment)
-    ) {
-      utils.build.cancelBuild(
-        `Build was cancelled because ${projectName} was not affected by the latest changes`,
-      )
+    const range = getDeployRange(process.env)
+    if (range.decision) {
+      console.log(`nx-skip-build: building ${projectName}, ${range.reason}`)
+      return
     }
-  },
-}
-// eslint-disable-next-line no-unused-vars
-function projectChanged(currentProject, fromHash, toHash) {
-  try {
-    const execSync = require('child_process').execSync
-    const getAffected = `nx show projects --affected --plain --base=${fromHash} --head=${toHash}`
-    const output = execSync(getAffected).toString()
-    //get the list of changed projects from the output
-    const changedProjects = output ? output.split('\n') : [] // array of affected projects
-    return (
-      changedProjects.findIndex((project) => {
-        return project ? project === currentProject : false
-      }) > -1
-    )
-  } catch (e) {
-    console.error(
-      `Error parsing affected projects ${e ? e.message : 'Unknown error'}`,
-    )
-    return
-  }
-}
 
-function isManualDeployment(isForcedDeployment) {
-  return isForcedDeployment === 'true'
+    let affected
+    try {
+      affected = nxAffectedProjects(range.base, range.head, process.cwd())
+    } catch (error) {
+      // Fail open: an nx or git error must never drop a deploy.
+      console.warn(
+        `nx-skip-build: building ${projectName}, could not compute affected projects: ${
+          error ? error.message : 'Unknown error'
+        }`,
+      )
+      return
+    }
+
+    console.log(
+      `nx-skip-build: affected between ${range.base} and ${range.head}: ${
+        affected.join(', ') || '(none)'
+      }`,
+    )
+    const { decision, reason } = decideFromNx(projectName, affected)
+    if (decision === SKIP) {
+      utils.build.cancelBuild(`Build was cancelled because ${reason}`)
+      return
+    }
+    console.log(`nx-skip-build: building, ${reason}`)
+  },
 }
