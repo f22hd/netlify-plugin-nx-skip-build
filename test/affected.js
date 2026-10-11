@@ -10,6 +10,7 @@ const {
   SKIP,
   getDeployRange,
   decideFromChangedFiles,
+  resolveProjectName,
   decideFromNx,
 } = require('../src/affected')
 const { run } = require('../bin/ignore')
@@ -88,8 +89,32 @@ test('the deploy range builds when there is nothing to compare', (t) => {
 })
 
 test('nx decision matches the exact project name', (t) => {
-  t.is(decideFromNx('shop', ['shop-admin', 'blog']).decision, SKIP)
-  t.is(decideFromNx('shop', ['blog', 'shop']).decision, BUILD)
+  const known = ['shop', 'shop-admin', 'blog']
+  t.is(decideFromNx('shop', ['shop-admin', 'blog'], known).decision, SKIP)
+  t.is(decideFromNx('shop', ['blog', 'shop'], known).decision, BUILD)
+})
+
+test('nx decision builds a project nx does not know', (t) => {
+  t.is(decideFromNx('dist', ['blog'], ['shop', 'blog']).decision, BUILD)
+})
+
+test('project name comes from PROJECT_NAME, then package dir, then publish dir', (t) => {
+  const constants = {
+    PACKAGE_PATH: 'apps/shop',
+    PUBLISH_DIR: '/opt/build/repo/dist/apps/shop-web',
+  }
+  t.deepEqual(resolveProjectName({ PROJECT_NAME: 'blog' }, constants), {
+    name: 'blog',
+    source: 'PROJECT_NAME',
+  })
+  t.deepEqual(resolveProjectName({}, constants), {
+    name: 'shop',
+    source: 'package directory',
+  })
+  t.deepEqual(resolveProjectName({}, { PUBLISH_DIR: constants.PUBLISH_DIR }), {
+    name: 'shop-web',
+    source: 'publish directory',
+  })
 })
 
 function git(cwd, ...args) {
@@ -188,13 +213,20 @@ test('plugin cancels only projects nx does not report as affected', (t) => {
   const other = commit(cwd, 'apps/blog/src/main.ts')
   const nx = join(cwd, 'node_modules', '.bin', 'nx')
   mkdirSync(dirname(nx), { recursive: true })
-  writeFileSync(nx, '#!/bin/sh\nprintf "blog\\nshop-admin\\n"\n', {
-    mode: 0o755,
-  })
+  // `nx show projects` lists every project; with --affected only blog and
+  // shop-admin.
+  writeFileSync(
+    nx,
+    '#!/bin/sh\nif [ "$3" = "--affected" ]; then printf "blog\\nshop-admin\\n"; else printf "shop\\nblog\\nshop-admin\\n"; fi\n',
+    { mode: 0o755 },
+  )
   const range = { CACHED_COMMIT_REF: first, COMMIT_REF: other }
 
   t.true(runPlugin(cwd, { ...range, PROJECT_NAME: 'shop' }))
+  // No PROJECT_NAME: the publish dir dist/apps/shop names the project.
+  t.true(runPlugin(cwd, range))
   t.false(runPlugin(cwd, { ...range, PROJECT_NAME: 'blog' }))
+  t.false(runPlugin(cwd, { ...range, PROJECT_NAME: 'unknown' }))
 })
 
 test('plugin builds instead of cancelling when nx cannot run', (t) => {

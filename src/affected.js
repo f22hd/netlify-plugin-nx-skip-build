@@ -1,6 +1,6 @@
 const { execFileSync } = require('child_process')
 const { existsSync } = require('fs')
-const { join } = require('path')
+const { basename, join } = require('path')
 
 const BUILD = 'build'
 const SKIP = 'skip'
@@ -72,7 +72,32 @@ function changedFiles(base, head, cwd) {
   return output.split('\n').filter(Boolean)
 }
 
-function decideFromNx(project, affected) {
+// The nx project a site deploys. Netlify sets no variable for it, so it is
+// derived from what Netlify does pass the plugin: the package directory
+// (`apps/<app>`) or the publish directory (`dist/apps/<app>`). PROJECT_NAME
+// overrides both.
+function resolveProjectName(env, constants) {
+  if (env.PROJECT_NAME) {
+    return { name: env.PROJECT_NAME, source: 'PROJECT_NAME' }
+  }
+  if (constants.PACKAGE_PATH) {
+    return {
+      name: basename(constants.PACKAGE_PATH),
+      source: 'package directory',
+    }
+  }
+  return { name: basename(constants.PUBLISH_DIR), source: 'publish directory' }
+}
+
+function decideFromNx(project, affected, known) {
+  // A derived name that is not an nx project would never appear in the
+  // affected list, so cancelling on it would stop the site deploying for good.
+  if (!known.includes(project)) {
+    return {
+      decision: BUILD,
+      reason: `${project} is not an nx project in this workspace; set PROJECT_NAME to the project this site deploys`,
+    }
+  }
   if (affected.includes(project)) {
     return { decision: BUILD, reason: `${project} is affected` }
   }
@@ -82,31 +107,32 @@ function decideFromNx(project, affected) {
   }
 }
 
-function nxAffectedProjects(base, head, cwd) {
+function runNx(args, cwd) {
   const localNx = join(cwd, 'node_modules', '.bin', 'nx')
   const [command, prefix] = existsSync(localNx)
     ? [localNx, []]
     : ['npx', ['--no-install', 'nx']]
-  const output = execFileSync(
-    command,
-    prefix.concat([
-      'show',
-      'projects',
-      '--affected',
-      `--base=${base}`,
-      `--head=${head}`,
-    ]),
-    {
-      cwd,
-      encoding: 'utf8',
-      env: Object.assign({}, process.env, { NX_DAEMON: 'false' }),
-      stdio: ['ignore', 'pipe', 'pipe'],
-    },
-  )
+  const output = execFileSync(command, prefix.concat(args), {
+    cwd,
+    encoding: 'utf8',
+    env: Object.assign({}, process.env, { NX_DAEMON: 'false' }),
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
   return output
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
+}
+
+function nxProjects(cwd) {
+  return runNx(['show', 'projects'], cwd)
+}
+
+function nxAffectedProjects(base, head, cwd) {
+  return runNx(
+    ['show', 'projects', '--affected', `--base=${base}`, `--head=${head}`],
+    cwd,
+  )
 }
 
 module.exports = {
@@ -116,6 +142,8 @@ module.exports = {
   parseList,
   decideFromChangedFiles,
   changedFiles,
+  resolveProjectName,
   decideFromNx,
+  nxProjects,
   nxAffectedProjects,
 }
